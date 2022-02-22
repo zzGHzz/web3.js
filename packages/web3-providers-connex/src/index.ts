@@ -54,7 +54,7 @@ export class ConnexProvider {
 	}
 
 	private _getStorageAt = (rpcPayload: JsonRpcPayload, callback: Callback) => {
-		if (rpcPayload.params[2] &&
+		if (rpcPayload.params.length == 3 &&
 			!(typeof rpcPayload.params[2] === 'string' && rpcPayload.params[2] === 'latest')
 		) {
 			callback(Err.MethodOptNotSupported('getStorageAt', 'defaultBlock'));
@@ -107,7 +107,7 @@ export class ConnexProvider {
 	}
 
 	private _getCode = (rpcPayload: JsonRpcPayload, callback: Callback) => {
-		if (rpcPayload.params[1] &&
+		if (rpcPayload.params.length == 2 &&
 			!(typeof rpcPayload.params[1] === 'string' && rpcPayload.params[1] === 'latest')
 		) {
 			callback(Err.MethodOptNotSupported('getCode', 'defaultBlock'));
@@ -141,7 +141,7 @@ export class ConnexProvider {
 	}
 
 	private _getBalance = (rpcPayload: JsonRpcPayload, callback: Callback) => {
-		if (rpcPayload.params[1] &&
+		if (rpcPayload.params.length == 2 &&
 			!(typeof rpcPayload.params[1] === 'string' && rpcPayload.params[1] === 'latest')
 		) {
 			callback(Err.MethodOptNotSupported('getBalance', 'defaultBlock'));
