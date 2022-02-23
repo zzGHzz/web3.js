@@ -30,7 +30,7 @@ export const Err = {
 	// 	return new TypeError(`Invalid storage key=${key}`);
 	// },
 
-	MethodOptNotSupported: (method: string, opt: string) => {
-		return new TypeError(`Options=${opt} of method=${method} not supported`);
+	MethodParamNotSupported: (method: string, index: number) => {
+		return new TypeError(`Parameter with index=${index}} of method=${method} not supported`);
 	}
 }

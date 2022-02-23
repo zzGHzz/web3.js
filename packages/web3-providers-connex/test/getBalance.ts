@@ -35,7 +35,7 @@ describe('Testing getBalance', () => {
 
 	it('option not supported', async () => {
 		const opt = 'earliest';
-		const expectedErr = Err.MethodOptNotSupported('getBalance', 'defaultBlock');
+		const expectedErr = Err.MethodParamNotSupported('getBalance', 2);
 		try {
 			await web3.eth.getBalance(addr, opt);
 			assert.fail();

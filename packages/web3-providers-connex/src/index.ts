@@ -12,6 +12,7 @@ import {
 	hexToNumber,
 } from './utils';
 import { Err } from './error';
+import {InputFormatter} from './formatter';
 
 type MethodHandler = (rpcPayload: JsonRpcPayload, callback: Callback) => void;
 
@@ -50,19 +51,21 @@ export class ConnexProvider {
 			callback(Err.MethodNotFound(rpcPayload.method));
 			return;
 		}
-		exec(rpcPayload, callback);
+
+		let _rpcPayload = rpcPayload;
+		if(InputFormatter[rpcPayload.method]) {
+			const input = InputFormatter[rpcPayload.method](rpcPayload);
+			if (input.err) {
+				callback(input.err);
+				return;
+			}
+			_rpcPayload = input.payload;
+		}
+		exec(_rpcPayload, callback);
 	}
 
 	private _getStorageAt = (rpcPayload: JsonRpcPayload, callback: Callback) => {
-		if (rpcPayload.params.length == 3 &&
-			!(typeof rpcPayload.params[2] === 'string' && rpcPayload.params[2] === 'latest')
-		) {
-			callback(Err.MethodOptNotSupported('getStorageAt', 'defaultBlock'));
-			return;
-		}
-
-		const k: string = toBytes32(rpcPayload.params[1]);
-		this.connex.thor.account(rpcPayload.params[0]).getStorage(k)
+		this.connex.thor.account(rpcPayload.params[0]).getStorage(rpcPayload.params[1])
 			.then(storage => {
 				callback(null, toRpcResponse(storage.value, rpcPayload.id));
 			})
@@ -107,13 +110,6 @@ export class ConnexProvider {
 	}
 
 	private _getCode = (rpcPayload: JsonRpcPayload, callback: Callback) => {
-		if (rpcPayload.params.length == 2 &&
-			!(typeof rpcPayload.params[1] === 'string' && rpcPayload.params[1] === 'latest')
-		) {
-			callback(Err.MethodOptNotSupported('getCode', 'defaultBlock'));
-			return;
-		}
-
 		this.connex.thor.account(rpcPayload.params[0]).getCode()
 			.then(code => {
 				callback(null, toRpcResponse(code.code, rpcPayload.id));
@@ -141,13 +137,6 @@ export class ConnexProvider {
 	}
 
 	private _getBalance = (rpcPayload: JsonRpcPayload, callback: Callback) => {
-		if (rpcPayload.params.length == 2 &&
-			!(typeof rpcPayload.params[1] === 'string' && rpcPayload.params[1] === 'latest')
-		) {
-			callback(Err.MethodOptNotSupported('getBalance', 'defaultBlock'));
-			return;
-		}
-
 		this.connex.thor.account(rpcPayload.params[0]).get()
 			.then(acc => {
 				callback(null, toRpcResponse(
@@ -186,12 +175,7 @@ export class ConnexProvider {
 	}
 
 	private _getBlockByNumber = (rpcPayload: JsonRpcPayload, callback: Callback) => {
-		const num = toBlockNumber(rpcPayload.params[0]);
-		if (num === null) {
-			callback(Err.BlockNotFound('pending'));
-			return;
-		}
-
+		const num = rpcPayload.params[0];
 		this.connex.thor.block(num).get()
 			.then(blk => {
 				if (!blk) {

@@ -35,7 +35,7 @@ describe('Testing getStorageAt', () => {
 
 	it('option not supported', async () => {
 		const opt = 'earliest';
-		const expectedErr = Err.MethodOptNotSupported('getStorageAt', 'defaultBlock');
+		const expectedErr = Err.MethodParamNotSupported('getStorageAt', 3);
 		try {
 			await web3.eth.getStorageAt(addr, 0, opt);
 			assert.fail();
