@@ -4,6 +4,7 @@
 
 import { RetBlock, RetLog, RetReceipt, RetTransaction } from './types'
 import { JsonRpcResponse } from 'web3-core-helpers'
+import { randomBytes } from 'crypto';
 const web3Utils = require('web3-utils');
 
 export const toRetBlock = function (b: Connex.Thor.Block): RetBlock {
@@ -95,4 +96,8 @@ export function toBytes32(hex: string): string {
 
 export function hexToNumber(hex: string): number {
 	return web3Utils.hexToNumber(hex);
+}
+
+export function randAddr(): string {
+	return '0x' + randomBytes(20).toString('hex');
 }

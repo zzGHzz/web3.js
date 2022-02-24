@@ -51,3 +51,17 @@ export interface RetLog extends Connex.VM.Event {
     blockHash: string;
     blockNumber: number;
 }
+
+export interface Web3TxObj {
+	to?: string;
+	from?: string;
+	value?: string;
+	data?: string;
+	gas?: string;
+}
+
+export interface ConnexTxObj {
+	clauses: [Connex.VM.Clause];
+	signer?: string;
+	gas?: number;
+}

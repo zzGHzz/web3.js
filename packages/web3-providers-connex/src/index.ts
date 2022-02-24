@@ -1,7 +1,7 @@
 'use strict';
 
 import Connex from '@vechain/connex';
-import { JsonRpcPayload, Callback } from './types';
+import { JsonRpcPayload, Callback, ConnexTxObj } from './types';
 import {
 	toRetBlock,
 	toRpcResponse,
@@ -12,7 +12,7 @@ import {
 	hexToNumber,
 } from './utils';
 import { Err } from './error';
-import {InputFormatter} from './formatter';
+import { InputFormatter } from './formatter';
 
 type MethodHandler = (rpcPayload: JsonRpcPayload, callback: Callback) => void;
 
@@ -37,6 +37,9 @@ export class ConnexProvider {
 		this.methodMap['eth_syncing'] = this._isSyncing;
 		this.methodMap['eth_getTransactionReceipt'] = this._getTransactionReceipt;
 		this.methodMap['eth_getStorageAt'] = this._getStorageAt;
+		this.methodMap['eth_sendTransaction'] = this._sendTransaction;
+		
+		this.methodMap['eth_gasPrice'] = this._gasPrice;
 	}
 
 	/**
@@ -53,7 +56,7 @@ export class ConnexProvider {
 		}
 
 		let _rpcPayload = rpcPayload;
-		if(InputFormatter[rpcPayload.method]) {
+		if (InputFormatter[rpcPayload.method]) {
 			const input = InputFormatter[rpcPayload.method](rpcPayload);
 			if (input.err) {
 				callback(input.err);
@@ -62,6 +65,24 @@ export class ConnexProvider {
 			_rpcPayload = input.payload;
 		}
 		exec(_rpcPayload, callback);
+	}
+
+	private _gasPrice = (rpcPayload: JsonRpcPayload, callback: Callback) => {
+		callback(null, toRpcResponse(0, rpcPayload.id));
+	}
+
+	private _sendTransaction = (rpcPayload: JsonRpcPayload, callback: Callback) => {
+		const txObj: ConnexTxObj = rpcPayload.params[0];
+		let ss = this.connex.vendor.sign('tx', txObj.clauses);
+		if (txObj.signer) { ss = ss.signer(txObj.signer); }
+		if (txObj.gas) { ss = ss.gas(txObj.gas); }
+		ss.request()
+			.then(ret => {
+				callback(null, toRpcResponse(ret.txid, rpcPayload.id));
+			})
+			.catch(err => {
+				callback(err);
+			});
 	}
 
 	private _getStorageAt = (rpcPayload: JsonRpcPayload, callback: Callback) => {
@@ -179,7 +200,7 @@ export class ConnexProvider {
 		this.connex.thor.block(num).get()
 			.then(blk => {
 				if (!blk) {
-					callback(Err.BlockNotFound(num? num : 'lastest'));
+					callback(Err.BlockNotFound(num ? num : 'lastest'));
 				} else {
 					callback(null, toRpcResponse(
 						toRetBlock(blk),

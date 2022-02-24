@@ -1,7 +1,7 @@
 'use strict';
 
-import { JsonRpcPayload } from './types';
-import { toBlockNumber, toBytes32 } from './utils';
+import { JsonRpcPayload, Web3TxObj, ConnexTxObj } from './types';
+import { hexToNumber, toBlockNumber, toBytes32 } from './utils';
 import { Err } from './error';
 
 const emptyPayload: JsonRpcPayload = {
@@ -51,13 +51,18 @@ InputFormatter.eth_getStorageAt = function (payload: JsonRpcPayload) {
 	return { payload: payload, err: null };
 }
 
-// this.methodMap['eth_getBlockByHash'] = this._getBlockByHash;
-// this.methodMap['eth_getBlockByNumber'] = this._getBlockByNumber;
-// this.methodMap['eth_chainId'] = this._getChainId;
-// this.methodMap['eth_getTransactionByHash'] = this._getTransactionByHash;
-// this.methodMap['eth_getBalance'] = this._getBalance;
-// this.methodMap['eth_blockNumber'] = this._getBlockNumber;
-// this.methodMap['eth_getCode'] = this._getCode;
-// this.methodMap['eth_syncing'] = this._isSyncing;
-// this.methodMap['eth_getTransactionReceipt'] = this._getTransactionReceipt;
-// this.methodMap['eth_getStorageAt'] = this._getStorageAt;
+InputFormatter.eth_sendTransaction = function (payload: JsonRpcPayload) {
+	const o1: Web3TxObj = payload.params[0];
+	const o2: ConnexTxObj = {
+		clauses: [{
+			to: !!o1.to ? o1.to : null,
+			value: !!o1.value ? o1.value : 0,
+			data: !!o1.data ? o1.data : '0x',
+		}],
+		signer: o1.from,
+		gas: !!o1.gas ? hexToNumber(o1.gas) : undefined,
+	}
+	payload.params[0] = o2;
+
+	return { payload: payload, err: null };
+}
